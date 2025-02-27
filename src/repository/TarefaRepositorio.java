@@ -1,61 +1,62 @@
 package repository;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.type.TypeFactory;
 import models.Tarefa;
-
-import java.io.*;
-import java.time.format.DateTimeFormatter;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class TarefaRepositorio {
-    private static final String ARQUIVO = "tarefas.dat";
+    private static final String FILE_PATH = "tarefas.json";
     private List<Tarefa> tarefas;
+    private ObjectMapper objectMapper;
 
     public TarefaRepositorio() {
+        objectMapper = new ObjectMapper();
+        objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
         this.tarefas = carregarTarefas();
+    }
+
+    private List<Tarefa> carregarTarefas() {
+        try {
+            File file = new File(FILE_PATH);
+            if (file.exists() && file.length() > 0) {
+                return objectMapper.readValue(file, TypeFactory.defaultInstance().constructCollectionType(List.class, Tarefa.class));
+            }
+        } catch (IOException e) {
+            System.out.println("Erro ao carregar tarefas.");
+        }
+        return new ArrayList<>();
+    }
+
+    private void salvarTarefas() {
+        try {
+            objectMapper.writeValue(new File(FILE_PATH), tarefas);
+        } catch (IOException e) {
+            System.out.println("Erro ao salvar tarefas.");
+        }
     }
 
     public void adicionarTarefa(Tarefa tarefa) {
         tarefas.add(tarefa);
-        tarefas.sort(Comparator.comparingInt(Tarefa::getPrioridade));
         salvarTarefas();
-        System.out.println("\nTarefa adicionada com sucesso!");
+        System.out.println("✅ Tarefa adicionada com sucesso!");
     }
 
-    public void removerTarefa(String nome) {
-        if (tarefas.removeIf(t -> t.getNome().equalsIgnoreCase(nome))) {
+    public void removerTarefa(int index) {
+        if (index >= 0 && index < tarefas.size()) {
+            tarefas.remove(index);
             salvarTarefas();
-            System.out.println("\nTarefa removida com sucesso!");
+            System.out.println("✅ Tarefa removida com sucesso!");
         } else {
-            System.out.println("\nTarefa não encontrada.");
+            System.out.println("❌ Índice inválido.");
         }
     }
 
     public List<Tarefa> listarTarefas() {
-        return new ArrayList<>(tarefas);
-    }
-
-    public List<Tarefa> listarPorData(String data) {
-        return tarefas.stream()
-                .filter(t -> t.getDataTermino().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")).equals(data))
-                .collect(Collectors.toList());
-    }
-
-    private void salvarTarefas() {
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(ARQUIVO))) {
-            oos.writeObject(tarefas);
-        } catch (IOException e) {
-            System.out.println("Erro ao salvar as tarefas.");
-        }
-    }
-
-    private List<Tarefa> carregarTarefas() {
-        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(ARQUIVO))) {
-            return (List<Tarefa>) ois.readObject();
-        } catch (IOException | ClassNotFoundException e) {
-            return new ArrayList<>();
-        }
+        return tarefas;
     }
 }
