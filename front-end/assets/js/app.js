@@ -2,18 +2,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const modal = document.getElementById("task-modal");
     const taskList = document.getElementById("task-list");
     const filterOptions = document.getElementById("status-filter");
-
+    const bulkStatusSelect = document.getElementById("bulk-status");
+    const applyStatusBtn = document.getElementById("apply-status-btn");
     let editingTask = null;
-
-    function formatDateToDisplay(dateString) {
-        const [year, month, day] = dateString.split("-");
-        return `${day}/${month}/${year}`;
-    }
-
-    function formatDateToInput(dateString) {
-        const [day, month, year] = dateString.split("/");
-        return `${year}-${month}-${day}`;
-    }
+    let editMode = false;
 
     window.openTaskModal = function () {
         modal.style.display = "flex";
@@ -37,8 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        const formattedDate = formatDateToDisplay(date);
-        const taskData = { name, desc, date: formattedDate, priority, status };
+        const taskData = { name, desc, date, priority, status };
 
         if (editingTask) {
             updateTask(editingTask, taskData);
@@ -54,6 +45,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const taskCard = document.createElement("div");
         taskCard.classList.add("task-card");
         taskCard.innerHTML = `
+            <input type="checkbox" class="task-checkbox" style="display: none;">
             <h3>${task.name}</h3>
             <p>${task.desc}</p>
             <p><strong>Data:</strong> ${task.date}</p>
@@ -67,6 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
         taskList.appendChild(taskCard);
 
         if (save) saveTasksToLocalStorage();
+        filterTasks();
     }
 
     window.editTask = function (btn) {
@@ -75,7 +68,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         document.getElementById("task-name").value = editingTask.querySelector("h3").innerText;
         document.getElementById("task-desc").value = paragraphs[0].innerText;
-        document.getElementById("task-date").value = formatDateToInput(paragraphs[1].innerText.split(": ")[1]);
+        document.getElementById("task-date").value = paragraphs[1].innerText.split(": ")[1];
         document.getElementById("task-priority").value = paragraphs[2].innerText.split(": ")[1];
         document.getElementById("task-status").value = paragraphs[3].innerText.split(": ")[1];
 
@@ -84,6 +77,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function updateTask(taskElement, updatedTask) {
         taskElement.innerHTML = `
+            <input type="checkbox" class="task-checkbox" style="display: none;">
             <h3>${updatedTask.name}</h3>
             <p>${updatedTask.desc}</p>
             <p><strong>Data:</strong> ${updatedTask.date}</p>
@@ -95,7 +89,33 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
         `;
         saveTasksToLocalStorage();
+        filterTasks();
+        editingTask = null;
     }
+
+    window.deleteTask = function (btn) {
+        btn.closest(".task-card").remove();
+        saveTasksToLocalStorage();
+    };
+
+    window.toggleEditMode = function () {
+        editMode = !editMode;
+        document.querySelectorAll(".task-checkbox").forEach(checkbox => {
+            checkbox.style.display = editMode ? "inline-block" : "none";
+        });
+        bulkStatusSelect.style.display = editMode ? "inline-block" : "none";
+        applyStatusBtn.style.display = editMode ? "inline-block" : "none";
+    };
+
+    window.applyBulkStatus = function () {
+        const newStatus = bulkStatusSelect.value;
+        document.querySelectorAll(".task-checkbox:checked").forEach(checkbox => {
+            const taskCard = checkbox.closest(".task-card");
+            const statusParagraph = taskCard.querySelector("p:nth-of-type(4)");
+            statusParagraph.innerHTML = `<strong>Status:</strong> ${newStatus}`;
+        });
+        saveTasksToLocalStorage();
+    };
 
     function saveTasksToLocalStorage() {
         const tasks = Array.from(document.querySelectorAll(".task-card")).map(taskCard => ({
@@ -111,7 +131,27 @@ document.addEventListener("DOMContentLoaded", () => {
     function loadTasksFromLocalStorage() {
         const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
         tasks.forEach(task => addTask(task, false));
+        filterTasks();
     }
+
+    window.filterTasks = function () {
+        const selectedStatus = filterOptions.value;
+        document.querySelectorAll(".task-card").forEach(taskCard => {
+            const taskStatus = taskCard.querySelector("p:nth-of-type(4)").innerText.split(": ")[1];
+            taskCard.style.display = (selectedStatus === "ALL" || taskStatus === selectedStatus) ? "block" : "none";
+        });
+    };
+
+    window.toggleFilterOptions = function () {
+        filterOptions.style.display = filterOptions.style.display === "none" ? "inline-block" : "none";
+    };
+
+    window.removeAllTasks = function () {
+        if (confirm("Tem certeza de que deseja remover todas as tarefas?")) {
+            document.getElementById("task-list").innerHTML = "";
+            localStorage.removeItem("tasks");
+        }
+    };
 
     function clearModalFields() {
         document.getElementById("task-name").value = "";
