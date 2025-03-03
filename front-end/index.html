@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TODO List</title>
+    <link rel="stylesheet" href="./assets/css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+<body>
+<header>
+    <h1>TODO List</h1>
+</header>
+
+<div class="controls">
+    <button class="btn" onclick="openTaskModal()">Adicionar Tarefa</button>
+    <button class="btn" onclick="toggleFilterOptions()">Filtrar Tarefas</button>
+    <select class="btn filter-options" id="status-filter" onchange="filterTasks()" style="display: none;">
+        <option value="ALL">Todas</option>
+        <option value="TODO">TODO</option>
+        <option value="DOING">DOING</option>
+        <option value="DONE">DONE</option>
+    </select>
+    <button class="btn" onclick="toggleEditMode()">Editar Tarefas</button>
+    <select id="bulk-status" class="btn" style="display: none;">
+        <option value="TODO">TODO</option>
+        <option value="DOING">DOING</option>
+        <option value="DONE">DONE</option>
+    </select>
+    <button id="apply-status-btn" class="btn" onclick="applyBulkStatus()" style="display: none;">Aplicar</button>
+    <button class="btn delete-all-btn" onclick="removeAllTasks()">Remover Todas</button>
+</div>
+
+<div class="container">
+    <div id="task-list"></div>
+</div>
+
+<!-- Modal de Adicionar/Editar Tarefa -->
+<div id="task-modal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeTaskModal()">&times;</span>
+        <h2 id="modal-title">Adicionar Tarefa</h2>
+        <input type="text" id="task-name" placeholder="Nome da tarefa">
+        <input type="text" id="task-desc" placeholder="Descrição">
+        <input type="date" id="task-date">
+        <select id="task-priority">
+            <option value="1">Prioridade 1</option>
+            <option value="2">Prioridade 2</option>
+            <option value="3">Prioridade 3</option>
+            <option value="4">Prioridade 4</option>
+            <option value="5">Prioridade 5</option>
+        </select>
+        <select id="task-status">
+            <option value="TODO">TODO</option>
+            <option value="DOING">DOING</option>
+            <option value="DONE">DONE</option>
+        </select>
+        <button class="save-btn" onclick="saveTask()">Salvar</button>
+    </div>
+</div>
+
+<script src="./assets/js/app.js"></script>
+</body>
+</html>
